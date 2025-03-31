@@ -17,10 +17,10 @@ class Teams extends Model
 
     public function pokemons()
     {
-        return $this->hasMany(\App\Models\Pokemons::class);
+        return $this->belongsTo(\App\Models\Pokemons::class);
     }
     public function trainers()
     {
-        return $this->hasMany(\App\Models\Trainers::class);
+        return $this->belongsTo(\App\Models\Trainers::class);
     }
 }
