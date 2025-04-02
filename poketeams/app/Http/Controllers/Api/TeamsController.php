@@ -13,22 +13,35 @@ class TeamsController extends Controller
      */
     public function index()
     {
-        $teams = Teams::where('status', 1)->get();
+        $teams = Teams::where('status','=', 1)->get();
 
-        if ($teams->isEmpty()) {
-            return response()->json(["message" => "No teams found", "code" => 404], 404);
+        if($teams){
+            $list = [];
+
+            foreach($teams as $team){
+                $object = [
+                    'id'=> $team->id,
+                    'name'=>$team->name,
+                    'pokemon'=>$team->pokemons?->name,
+                    'entreandor'=>$team->trainers?->name,
+                    'message'=>[
+                        "code"=>'202',
+                        "message"=>'Equipos'
+                    ]
+                ];
+
+                array_push($list, $object);
+            }
+
+            return response()->json($list);
         }
-
-        $list = $teams->map(function ($team) {
-            return [
-                "id" => $team->id,
-                "name" => $team->name,
-                "pokemon_id" => $team->pokemons?->name,
-                "trainer" => $team->trainers?->name
+        else{
+            $object = [
+                "code"=>"404",
+                "message"=> "No info."
             ];
-        });
-
-        return response()->json($list, 200);
+            return response()->json($object);
+        }
     }
 
     /**
@@ -36,45 +49,60 @@ class TeamsController extends Controller
      */
     public function show($id)
     {
-        $team = Teams::find($id);
+        $team = Teams::where('status','=',1)->where('id','=',$id)->first();
 
-        if (!$team) {
-            return response()->json(["message" => "Team not found", "code" => 404], 404);
-        }
-
-        $object = [
+        if ($team) {
+            $object = [
             "id" => $team->id,
             "name" => $team->name,
             "pokemon" => $team->pokemons?->name,
             "trainer" => $team->trainers?->name
         ];
+            return response()->json($object);
+        }
+        else{
+            $object = [
+                "code"=> "404",
+                "message"=>"equipo no encontrado"
+            ];
+            return response()->json($object);
 
-        return response()->json($object, 200);
+        }
     }
 
     /**
      * Crea un nuevo equipo.
      */
-    public function store(Request $request)
+    public function create(Request $request)
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'pokemon_id' => 'required|integer|exists:pokemons,id',
             'trainer_id' => 'required|integer|exists:trainers,id',
-            'status' => 'boolean',
+            'status' => 'boolean|default:1',
+        ]);
+        $team = Teams::create([
+            "name"=>$data["name"],
+            "pokemon_id"=>$data["pokemon_id"],
+            "trainer_id"=>$data["trainer_id"],
+            "status"=>1
         ]);
 
-        $data['status'] = $data['status'] ?? 1; // Estado por defecto activo
+        if($team){
+            $object =[
+                "code"=> "201",
+                "mensaje"=>"Team created successfully"
+            ];
+            return response()->json([$team, $object]);
 
-        $team = Teams::create($data);
+        }
 
-        return response()->json(["message" => "Team created successfully", "team" => $team], 201);
     }
 
     /**
      * Actualiza un equipo existente.
      */
-    public function update(Request $request, $id)
+    public function edit(Request $request, $id)
     {
         $team = Teams::find($id);
 
@@ -86,6 +114,7 @@ class TeamsController extends Controller
             'name' => 'required|string|max:255',
             'pokemon_id' => 'required|integer|exists:pokemons,id',
             'trainer_id' => 'required|integer|exists:trainers,id',
+            'status'=>'boolean|default:1'
         ]);
 
         $team->update($data);
@@ -98,14 +127,23 @@ class TeamsController extends Controller
      */
     public function destroy($id)
     {
-        $team = Teams::find($id);
+        $team = Teams::where('id','=',$id)->where("status","=",1);
 
-        if (!$team) {
-            return response()->json(["message" => "Team not found", "code" => 404], 404);
+        if ($team) {
+            $object = [
+                "code"=>"200",
+                "message"=>"Equipo eliminado correctamente"
+            ];
+            
+            return response()->json($object);
         }
+        else{
+            $object = [
+                "code"=>"404",
+                "message"=>"Equipo no eliminado o eliminado incorrectamente"
+            ];
 
-        $team->update(['status' => 0]);
-
-        return response()->json(["message" => "Team deleted successfully"], 200);
+            return response()->json($object);
+        }
     }
 }

@@ -48,22 +48,38 @@ class PokemonsController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function create(Request $request)
     {
+        
         $data = $request->validate([
             'name' => 'required|string|max:255',
-            'mote' => 'nullable|string|max:255',
+            'mote' => 'string|max:255',
             'type_id' => 'required|integer',
             'level' => 'required|integer',
-            'status' => 'boolean',
+            'status' => 'boolean|default:1',
         ]);
 
-        $data['status'] = $data['status'] ?? 1; // Default status to 1
+        $pokemon = Pokemons::create([
+            'name' => $data['name'],
+            'mote' => $data['mote'],
+            'type_id' => $data['type_id'],
+            'level' => $data['level'],
+            'status' => 1,
+        ])->save();
 
-        $pokemon = Pokemons::create($data);
-        
-
-        return response()->json(["message" => "Pokemon created successfully.", "pokemon" => $pokemon], 201);
+        if ($pokemon) {
+            $object = [
+                "code"=> "202",
+                "message"=>"Pokemon creado correctamente"
+            ];
+            return response()->json([$object,$pokemon]);
+        } else {
+            $object = [
+                "code"=> "404",
+                "message"=>"Pokemon NO creado"
+            ];
+              return response()->json($object);
+        }
     }
 
     /**
@@ -71,28 +87,37 @@ class PokemonsController extends Controller
      */
     public function show($id)
     {
-        $pokemon = Pokemons::find($id);
+        $pokemon = Pokemons::where('status', '=', 1)->where('id', '=', $id)->first();
 
         if($pokemon){
-            $object =[
-                ''
+            $object = [
+                    'id'=> $pokemon->id,
+                    'name'=>$pokemon->name,
+                    'mote'=>$pokemon->mote,
+                    'type_id'=>$pokemon->types?->name,
+                    'level'=>$pokemon->level,
+                    'message'=>[
+                        "code"=>'202',
+                        "message"=>'Pokemons'
+                    ]
             ];
+            return response()->json($object);
         }
-        
-        if (!$pokemon) {
-            return response()->json(["message" => "Pokemon not found."], 404);
+        else{
+            $object = [
+                "error"=> 404,
+                "menssage"=>"Pokemon no encontrado"
+            ];
+            return response()->json($object);
         }
-        
-        return response()->json($pokemon, 200);
-    
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function edit(Request $request, $id)
     {
-        $pokemon = Pokemons::find($id);
+        $pokemon = Pokemons::where('status', '=', 1)->where('id', '=', $id)->first();
         
         if (!$pokemon) {
             return response()->json(["message" => "Pokemon not found."], 404);
@@ -103,11 +128,25 @@ class PokemonsController extends Controller
             'mote' => 'nullable|string|max:255',
             'type_id' => 'required|integer',
             'level' => 'required|integer',
+            'status'=> 'boolean|default:1'
         ]);
         
         $pokemon->update($data);
-        
-        return response()->json(["message" => "Pokemon updated successfully.", "pokemon" => $pokemon], 200);
+
+        if($pokemon){
+            $object = [
+                "code"=>"200",
+                "mensaje"=>"Pokemon updated successfully."
+            ];
+            return response()->json([$object, $pokemon]);
+        }
+        else{
+            $object = [
+                "code"=>"404",
+                "mensaje"=>"Pokemon not updated successfully.."  
+            ];
+            return response()->json([$object]);
+        }
     }
 
     /**
@@ -115,14 +154,22 @@ class PokemonsController extends Controller
      */
     public function destroy($id)
     {
-        $pokemon = Pokemons::find($id);
-        
+        $pokemon = Pokemons::where('status', '=', 1)->where('id', '=', $id)->first();        
         if (!$pokemon) {
-            return response()->json(["message" => "Pokemon not found."], 404);
+            $object =[
+                "code"=>"404",
+                "mensaje"=>"Pokemon not found."
+            ];
+            return response()->json($object);
         }
-        
-        $pokemon->update(['status' => 0]);
-        
-        return response()->json(["message" => "Pokemon deleted successfully."], 200);
+        else{
+            $pokemon->update(['status' => 0]);
+            $object = [
+                    "code"=>"200",
+                    "mensaje"=>"Pokemon deleted successfully."
+            ];
+
+            return response()->json([$object, $pokemon]);
+        }
     }
 }

@@ -9,83 +9,152 @@ use Illuminate\Http\Request;
 class TypesController extends Controller
 {
     /**
-     * Lista todos los tipos activos.
+     * Display a listing of the resource.
      */
     public function index()
     {
-        $types = Types::where('status', 1)->get();
+        $types = Types::where('status','=', 1)->get();
 
-        if ($types->isEmpty()) {
-            return response()->json(["message" => "No types found", "code" => 404], 404);
+        if($types){
+            $list = [];
+
+            foreach($types as $type){
+                $object = [
+                    'id'=> $type->id,
+                    'name'=>$type->name,
+                    'message'=>[
+                        "code"=>'202',
+                        "message"=>'Types'
+                    ]
+                ];
+
+                array_push($list, $object);
+            }
+
+            return response()->json($list);
         }
-
-        return response()->json($types, 200);
+        else{
+            $object = [
+                "code"=>"404",
+                "message"=> "No info."
+            ];
+            return response()->json($object);
+        }
     }
 
     /**
-     * Muestra un tipo por su ID.
+     * Store a newly created resource in storage.
+     */
+    public function create(Request $request)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'status' => 'boolean|default:1',
+        ]);
+
+        $type = Types::create([
+            'name' => $data['name'],
+            'status' => 1,
+        ])->save();
+
+        if ($type) {
+            $object = [
+                "code"=> "202",
+                "message"=>"Type creado correctamente",
+                "type" => $type
+            ];
+            return response()->json($object);
+        } else {
+            $object = [
+                "code"=> "404",
+                "message"=>"Type NO creado"
+            ];
+              return response()->json($object);
+        }
+    }
+
+    /**
+     * Display the specified resource.
      */
     public function show($id)
     {
-        $type = Types::find($id);
+        $type = Types::where('status', '=', 1)->where('id', '=', $id)->first();
 
-        if (!$type) {
-            return response()->json(["message" => "Type not found", "code" => 404], 404);
+        if($type){
+            $object = [
+                    'id'=> $type->id,
+                    'name'=>$type->name,
+                    'message'=>[
+                        "code"=>'202',
+                        "message"=>'Type'
+                    ]
+            ];
+            return response()->json($object);
         }
-
-        return response()->json($type, 200);
+        else{
+            $object = [
+                "error"=> 404,
+                "menssage"=>"Type no encontrado"
+            ];
+            return response()->json($object);
+        }
     }
 
     /**
-     * Crea un nuevo tipo.
+     * Update the specified resource in storage.
      */
-    public function store(Request $request)
+    public function edit(Request $request, $id)
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'status' => 'boolean',
-        ]);
-
-        $data['status'] = $data['status'] ?? 1; // Estado activo por defecto
-
-        $type = Types::create($data);
-
-        return response()->json(["message" => "Type created successfully", "type" => $type], 201);
-    }
-
-    /**
-     * Actualiza un tipo existente.
-     */
-    public function update(Request $request, $id)
-    {
-        $type = Types::find($id);
-
+        $type = Types::where('status', '=', 1)->where('id', '=', $id)->first();
+        
         if (!$type) {
-            return response()->json(["message" => "Type not found", "code" => 404], 404);
+            return response()->json(["message" => "Type not found."], 404);
         }
-
+        
         $data = $request->validate([
             'name' => 'required|string|max:255',
+            'status'=> 'boolean|default:1'
         ]);
-
+        
         $type->update($data);
 
-        return response()->json(["message" => "Type updated successfully", "type" => $type], 200);
+        if($type){
+            $object = [
+                "code"=>"200",
+                "mensaje"=>"Type updated successfully."
+            ];
+            return response()->json([$object, $type]);
+        }
+        else{
+            $object = [
+                "code"=>"404",
+                "mensaje"=>"Type not updated successfully.."  
+            ];
+            return response()->json([$object]);
+        }
     }
 
     /**
-     * Elimina (desactiva) un tipo.
+     * Remove the specified resource from storage.
      */
     public function destroy($id)
     {
-        $type = Types::find($id);
-
+        $type = Types::where('status', '=', 1)->where('id', '=', $id)->first();        
         if (!$type) {
-            return response()->json(["message" => "Type not found", "code" => 404], 404);
+            $object =[
+                "code"=>"404",
+                "mensaje"=>"Type not found."
+            ];
+            return response()->json($object);
         }
+        else{
+            $type->update(['status' => 0]);
+            $object = [
+                    "code"=>"200",
+                    "mensaje"=>"Type deleted successfully."
+            ];
 
-        $type->update(['status' => 0]);
-
-        return response()->json(["message" => "Type deleted successfully"], 200);
+            return response()->json($object);
+        }
     }
 }
