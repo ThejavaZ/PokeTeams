@@ -17,10 +17,10 @@ class Teams extends Model
 
     public function pokemons()
     {
-        return $this->belongsTo(\App\Models\Pokemons::class);
+        return $this->belongsTo(\App\Models\Pokemons::class, "pokemon_id");
     }
     public function trainers()
     {
-        return $this->belongsTo(\App\Models\Trainers::class);
+        return $this->belongsTo(\App\Models\Trainers::class,"trainer_id");
     }
 }

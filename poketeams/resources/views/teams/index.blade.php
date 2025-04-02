@@ -35,8 +35,8 @@
                             @foreach ($teams as $team)
                                 <tr>
                                     <td>{{ $team->name }}</td>
-                                    <td>{{ $team->pokemons ? $teams->pokemons->name: "N/A"  }}</td>
-                                    <td>{{ $team->trainer_id}}</td>
+                                    <td>{{ $team->pokemons?->name  }}</td>
+                                    <td>{{ $team->trainers?->name}}</td>
                                     <td>{{ $team->created_at->diffForHumans() }}</td>
                                     <td>{{ $team->created_at->format('d/M/Y h:i:s') }}</td>
                                     <td>{{ $team->updated_at->format('d/M/Y h:i:s') }}</td>

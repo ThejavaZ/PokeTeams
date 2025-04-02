@@ -14,7 +14,7 @@ class PokemonsController extends Controller
      */
     public function index()
     {
-        $pokemons = Pokemons::all();
+        $pokemons = Pokemons::where('status', 1)->get();
         return view('pokemons.index', compact('pokemons'));
     }
 
@@ -138,6 +138,15 @@ class PokemonsController extends Controller
      */
     public function destroy(Pokemons $pokemon)
     {
-        
+        $pokemon->update(['status' => 0]);
+
+        if ($pokemon) {
+            return redirect()->route('pokemons')->with('success', 'Pokémon eliminado correctamente.');
+        } else {
+            return redirect()->back()->with('error', 'Error al eliminar el Pokémon.');
+        }
     }
+
+
+
 }

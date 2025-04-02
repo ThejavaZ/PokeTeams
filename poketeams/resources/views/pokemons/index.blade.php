@@ -53,13 +53,16 @@
 					<a class="btn btn-sm btn-primary" href="{{ route('pokemons.show', $pokemon->id) }}">
 						<i class="fa fa-eye"></i>
 					</a>
-                    <form action="{{ 'pokemons.destroy ', $pokemon->id }}" method="POST" class="d-inline">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-sm btn-danger">
-                            <i class="fa fa-trash"></i>
-                        </button>
-                    </form>
+
+					<form action="{{ route('pokemons.destroy', $pokemon->id) }}" method="POST">
+						@csrf
+						@method('DELETE')
+						<button type="submit" class="btn btn-sm btn-danger">
+							<i class="fa fa-trash"></i>
+						</button>
+					</form>
+
+
 					<a href="{{ route('pokemons.edit', $pokemon->id) }}" class="btn btn-sm btn-success">
 						<i class="fa fa-book"></i>
 					</a>

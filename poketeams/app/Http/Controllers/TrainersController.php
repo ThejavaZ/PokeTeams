@@ -12,7 +12,7 @@ class TrainersController extends Controller
      */
     public function index()
     {
-        $trainers = Trainers::all();
+        $trainers = Trainers::where('status', 1)->get();
         return view('trainers.index', compact('trainers'));
     }
 
@@ -21,8 +21,7 @@ class TrainersController extends Controller
      */
     public function create()
     {
-        $trainers = Trainers::all();
-        return view('trainers.create', compact('trainers'));
+        return view('trainers.create');
     }
 
     /**
@@ -30,39 +29,81 @@ class TrainersController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'region' => 'required|string|max:100',
+            'status' => 'boolean|default:1',
+        ]);
+
+        $trainer = Trainers::create([
+            'name' => $data['name'],
+            'region' => $data['region'],
+            'status' => 1,
+        ]);
+
+        if ($trainer) {
+            return redirect()->route('trainers.index')->with('success', 'Trainer created successfully.');
+        } else {
+            return redirect()->back()->with('error', 'Failed to create Trainer.');
+        }
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Trainers $trainers)
+    public function show($id)
     {
-        $trainers = Trainers::find($trainers->id);
-        return view('trainers.show', compact('trainers'));
+        $trainer = Trainers::find($id);
+        if (!$trainer) {
+            return back()->with('error', 'Trainer not found.');
+        }
+        return view('trainers.show', compact('trainer'));
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Trainers $trainers)
+    public function edit($id)
     {
-        //
+        $trainer = Trainers::find($id);
+        if (!$trainer) {
+            return back()->with('error', 'Trainer not found.');
+        }
+        return view('trainers.edit', compact('trainer'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Trainers $trainers)
+    public function update(Request $request, $id)
     {
-        //
+        $trainer = Trainers::find($id);
+        if (!$trainer) {
+            return back()->with('error', 'Trainer not found.');
+        }
+
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'region' => 'required|string|max:100',
+        ]);
+
+        $trainer->update($data);
+
+        return redirect()->route('trainers.index')->with('success', 'Trainer updated successfully.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Trainers $trainers)
+    public function destroy($id)
     {
-        //
+        $trainer = Trainers::find($id);
+        if (!$trainer) {
+            return back()->with('error', 'Trainer not found.');
+        }
+
+        $trainer->update(['status' => 0]);
+
+        return redirect()->route('trainers.index')->with('success', 'Trainer deleted successfully.');
     }
 }

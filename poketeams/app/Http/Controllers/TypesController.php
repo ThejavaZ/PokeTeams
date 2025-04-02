@@ -12,7 +12,7 @@ class TypesController extends Controller
      */
     public function index()
     {
-        $types = Types::all();
+        $types = Types::where('status', 1)->get();
         return view('types.index', compact('types'));
     }
 
@@ -21,7 +21,7 @@ class TypesController extends Controller
      */
     public function create()
     {
-        //
+        return view('types.create');
     }
 
     /**
@@ -29,38 +29,65 @@ class TypesController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'status' => 'boolean|default:1',
+        ]);
+
+        $type = Types::create([
+            'name' => $data['name'],
+            'status'=> 1
+        ])->save();
+        if($type){
+            return redirect()->route('types.index')->with('success', 'Tipo creado correctamente.');
+        }
+        else {
+            return redirect()->back()->with('error', 'Failed to create Type.');
+        }
+
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Types $types)
+    public function show($id)
     {
-        //
+        $type = Types::findOrFail($id);
+        return view('types.show', compact('type'));
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Types $types)
+    public function edit($id)
     {
-        //
+        $type = Types::findOrFail($id);
+        return view('types.edit', compact('type'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Types $types)
+    public function update(Request $request, $id)
     {
-        //
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        $type = Types::findOrFail($id);
+        $type->update($data);
+
+        return redirect()->route('types.index')->with('success', 'Tipo actualizado correctamente.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Types $types)
+    public function destroy($id)
     {
-        //
+        $type = Types::findOrFail($id);
+        $type->update(['status' => 0]);
+
+        return redirect()->route('types.index')->with('success', 'Tipo eliminado correctamente.');
     }
 }

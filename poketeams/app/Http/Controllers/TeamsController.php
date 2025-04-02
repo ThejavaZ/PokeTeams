@@ -12,7 +12,7 @@ class TeamsController extends Controller
      */
     public function index()
     {
-        $teams = Teams::all();
+        $teams = Teams::where('status', 1)->get();
         return view('teams.index', compact('teams'));
     }
 
@@ -21,8 +21,7 @@ class TeamsController extends Controller
      */
     public function create()
     {
-        $teams = Teams::all();
-        return view('teams.create', compact('teams'));
+        return view('teams.create');
     }
 
     /**
@@ -30,38 +29,84 @@ class TeamsController extends Controller
      */
     public function store(Request $request)
     {
-        
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'pokemon_id'=>'required|int',
+            'trainer_id'=>'required|int',
+            'status' => 'boolean|default:1',
+        ]);
+
+        $team = Teams::create([
+            'name' => $data['name'],
+            'pokemon_id'=>$data['pokemon_id'],
+            'trainer_id'=>$data['trainer_id'],
+            'status' => 1,
+        ])->save();
+
+        if ($team) {
+            return redirect()->route('teams.index')->with('success', 'Team created successfully.');
+        } else {
+            return redirect()->back()->with('error', 'Failed to create Team.');
+        }
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Teams $teams)
+    public function show($id)
     {
-        //
+        $team = Teams::find($id);
+        if (!$team) {
+            return back()->with('error', 'Team not found.');
+        }
+        return view('teams.show', compact('team'));
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Teams $teams)
+    public function edit($id)
     {
-        //
+        $team = Teams::find($id);
+        if (!$team) {
+            return back()->with('error', 'Team not found.');
+        }
+        return view('teams.edit', compact('team'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Teams $teams)
+    public function update(Request $request, $id)
     {
-        //
+        $team = Teams::find($id);
+        if (!$team) {
+            return back()->with('error', 'Team not found.');
+        }
+
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'pokemon_id'=>'required|int',
+            'trainer_id'=>'required|int'
+        ]);
+
+        $team->update($data);
+
+        return redirect()->route('teams.index')->with('success', 'Team updated successfully.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Teams $teams)
+    public function destroy($id)
     {
-        //
+        $team = Teams::find($id);
+        if (!$team) {
+            return back()->with('error', 'Team not found.');
+        }
+
+        $team->update(['status' => 0]);
+
+        return redirect()->route('teams.index')->with('success', 'Team deleted successfully.');
     }
 }
